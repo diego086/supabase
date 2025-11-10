@@ -59,18 +59,24 @@ applications:
               pnpm install --frozen-lockfile
         build:
           commands:
-            # Ensure nvm and Node.js 22 are available
+            # Ensure nvm, Node.js 22, and corepack/pnpm are available
             - |
               export NVM_DIR="$HOME/.nvm"
               [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
               nvm use 22
               node --version
+              # Enable corepack to make pnpm available
+              corepack enable
+              corepack prepare pnpm@10.18.0 --activate
+              pnpm --version
             # Extract app name from AMPLIFY_MONOREPO_APP_ROOT path for pnpm filter
             # If AMPLIFY_MONOREPO_APP_ROOT=apps/studio, this becomes 'studio'
             - |
               export NVM_DIR="$HOME/.nvm"
               [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
               nvm use 22
+              # Ensure corepack is enabled for pnpm
+              corepack enable
               APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
               pnpm --filter $APP_NAME build
       artifacts:
