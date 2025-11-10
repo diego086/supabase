@@ -46,7 +46,7 @@
     "knip": "pnpx knip@~5.50.0"
   },
   "dependencies": {
-    "next": "catalog:"
+    "next": "^15.5.2"
   },
   "devDependencies": {
     "@aws-sdk/client-secrets-manager": "^3.410.0",
