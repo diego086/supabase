@@ -84,16 +84,26 @@ applications:
               corepack enable
               corepack prepare pnpm@10.18.0 --activate
               pnpm --version
-            # Build the studio app using pnpm from the apps/studio directory
+            # Build the studio app using pnpm workspace filter from root
             - |
               export NVM_DIR="$HOME/.nvm"
               [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
               nvm use 22
               # Ensure corepack is enabled for pnpm
               corepack enable
-              # Navigate to the studio directory and run build
-              cd apps/studio
-              pnpm run build
+              # Find and navigate to workspace root (where pnpm-workspace.yaml exists)
+              while [ ! -f "pnpm-workspace.yaml" ] && [ "$(pwd)" != "/" ]; do
+                cd ..
+              done
+              if [ ! -f "pnpm-workspace.yaml" ]; then
+                echo "ERROR: Could not find workspace root (pnpm-workspace.yaml)"
+                exit 1
+              fi
+              echo "Workspace root: $(pwd)"
+              # Verify next is available in node_modules
+              ls -la node_modules/.bin/next 2>&1 || echo "next not in root node_modules"
+              # Use pnpm filter to build studio with proper workspace context
+              pnpm --filter studio run build
       artifacts:
         # For Next.js apps, Amplify handles the build output automatically
         # Since AMPLIFY_MONOREPO_APP_ROOT=studio, this resolves to apps/studio/.next
