@@ -6,11 +6,12 @@ applications:
       phases:
         preBuild:
           commands:
-            # AMPLIFY_MONOREPO_APP_ROOT should be set to 'studio' in Amplify console
-            # This ensures we're building the correct app
+            # IMPORTANT: AMPLIFY_MONOREPO_APP_ROOT must match appRoot above
+            # Set AMPLIFY_MONOREPO_APP_ROOT to 'apps/studio' in Amplify console
+            # Extract app name from path for pnpm filter (e.g., 'apps/studio' -> 'studio')
             - |
-              APP_NAME=${AMPLIFY_MONOREPO_APP_ROOT:-studio}
-              echo "Building app: $APP_NAME (AMPLIFY_MONOREPO_APP_ROOT=$AMPLIFY_MONOREPO_APP_ROOT)"
+              APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
+              echo "Building app: $APP_NAME (from path: ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})"
             # Install pnpm if not available
             - corepack enable
             - corepack prepare pnpm@10.18.0 --activate
@@ -18,9 +19,11 @@ applications:
             - pnpm install --frozen-lockfile
         build:
           commands:
-            # Build the app specified by AMPLIFY_MONOREPO_APP_ROOT (should be 'studio')
-            # pnpm filter uses the app name directly, not the path
-            - pnpm --filter ${AMPLIFY_MONOREPO_APP_ROOT:-studio} build
+            # Extract app name from AMPLIFY_MONOREPO_APP_ROOT path for pnpm filter
+            # If AMPLIFY_MONOREPO_APP_ROOT=apps/studio, this becomes 'studio'
+            - |
+              APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
+              pnpm --filter $APP_NAME build
       artifacts:
         # For Next.js apps, Amplify handles the build output automatically
         # Since AMPLIFY_MONOREPO_APP_ROOT=studio, this resolves to apps/studio/.next
