@@ -56,7 +56,14 @@ applications:
               # Ensure nvm is sourced
               export NVM_DIR="$HOME/.nvm"
               [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              # Ensure corepack is enabled
+              corepack enable
+              # Install all dependencies
               pnpm install --frozen-lockfile
+              # Verify Next.js is installed
+              APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
+              echo "Verifying dependencies for $APP_NAME..."
+              pnpm --filter $APP_NAME list next || echo "Warning: next not found in $APP_NAME"
         build:
           commands:
             # Ensure nvm, Node.js 22, and corepack/pnpm are available
@@ -78,7 +85,21 @@ applications:
               # Ensure corepack is enabled for pnpm
               corepack enable
               APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
-              pnpm --filter $APP_NAME build
+              APP_DIR="apps/$APP_NAME"
+              # Verify we're in the root directory and dependencies are installed
+              pwd
+              echo "Checking for next in workspace..."
+              # Check if next exists in the app's node_modules or root
+              if [ -f "$APP_DIR/node_modules/.bin/next" ]; then
+                echo "Found next in $APP_DIR/node_modules/.bin/next"
+              elif [ -f "node_modules/.bin/next" ]; then
+                echo "Found next in root node_modules/.bin/next"
+              else
+                echo "Warning: next not found, but continuing..."
+              fi
+              # Build using pnpm filter - pnpm should handle PATH correctly
+              # Use --dir to ensure we're in the right context
+              cd $APP_DIR && pnpm build && cd ../..
       artifacts:
         # For Next.js apps, Amplify handles the build output automatically
         # Since AMPLIFY_MONOREPO_APP_ROOT=studio, this resolves to apps/studio/.next
