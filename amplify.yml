@@ -12,6 +12,12 @@ applications:
             - |
               APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
               echo "Building app: $APP_NAME (from path: ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})"
+            # Install and use Node.js 22 (required by package.json engines.node >=22)
+            # Source nvm to ensure it's available in the shell
+            - export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            - nvm install 22
+            - nvm use 22
+            - node --version
             # Install pnpm if not available
             - corepack enable
             - corepack prepare pnpm@10.18.0 --activate
@@ -19,6 +25,9 @@ applications:
             - pnpm install --frozen-lockfile
         build:
           commands:
+            # Ensure Node.js 22 is used (required by package.json engines.node >=22)
+            - export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            - nvm use 22
             # Extract app name from AMPLIFY_MONOREPO_APP_ROOT path for pnpm filter
             # If AMPLIFY_MONOREPO_APP_ROOT=apps/studio, this becomes 'studio'
             - |
