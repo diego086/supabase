@@ -84,31 +84,16 @@ applications:
               corepack enable
               corepack prepare pnpm@10.18.0 --activate
               pnpm --version
-            # Extract app name from AMPLIFY_MONOREPO_APP_ROOT path for pnpm filter
-            # If AMPLIFY_MONOREPO_APP_ROOT=apps/studio, this becomes 'studio'
+            # Build the studio app using pnpm from the apps/studio directory
             - |
               export NVM_DIR="$HOME/.nvm"
               [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
               nvm use 22
               # Ensure corepack is enabled for pnpm
               corepack enable
-              APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
-              APP_DIR="apps/$APP_NAME"
-              # Ensure we're in the root directory
-              pwd
-              # Find where next is located
-              NEXT_PATH=$(find . -name "next" -path "*/node_modules/.bin/next" 2>/dev/null | head -1)
-              if [ -n "$NEXT_PATH" ]; then
-                echo "Found next at: $NEXT_PATH"
-                # Add the directory containing next to PATH
-                export PATH="$(dirname $(realpath $NEXT_PATH)):$PATH"
-              fi
-              # Also add common node_modules paths
-              export PATH="$PWD/node_modules/.bin:$PWD/$APP_DIR/node_modules/.bin:$PATH"
-              # Verify next is now accessible
-              which next && next --version || echo "next still not found in PATH"
-              # Build using pnpm filter - pnpm should handle workspace PATH correctly
-              pnpm --filter $APP_NAME run build
+              # Navigate to the studio directory and run build
+              cd apps/studio
+              pnpm run build
       artifacts:
         # For Next.js apps, Amplify handles the build output automatically
         # Since AMPLIFY_MONOREPO_APP_ROOT=studio, this resolves to apps/studio/.next
