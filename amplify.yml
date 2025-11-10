@@ -3,6 +3,13 @@ frontend:
   phases:
     preBuild:
       commands:
+        # Set default app root if not provided via environment variable
+        - |
+          if [ -z "$AMPLIFY_MONOREPO_APP_ROOT" ]; then
+            echo "AMPLIFY_MONOREPO_APP_ROOT not set, defaulting to studio"
+            export AMPLIFY_MONOREPO_APP_ROOT=studio
+          fi
+          echo "App root: $AMPLIFY_MONOREPO_APP_ROOT"
         # Install pnpm if not available
         - corepack enable
         - corepack prepare pnpm@10.18.0 --activate
@@ -10,10 +17,15 @@ frontend:
         - pnpm install --frozen-lockfile
     build:
       commands:
-        # Build the specific app
-        # Change 'studio' to 'docs' or 'www' if deploying a different app
-        # Make sure AMPLIFY_MONOREPO_APP_ROOT is set to the same app directory in Amplify console
-        - pnpm --filter studio build
+        # Build the specific app from the app directory
+        # AMPLIFY_MONOREPO_APP_ROOT should be set to 'studio', 'docs', or 'www'
+        - |
+          APP_NAME=${AMPLIFY_MONOREPO_APP_ROOT:-studio}
+          APP_DIR="apps/$APP_NAME"
+          echo "Building app: $APP_NAME in directory: $APP_DIR"
+          cd $APP_DIR
+          pnpm build
+          cd ../..
   artifacts:
     # For Next.js apps, Amplify handles the build output automatically
     # The baseDirectory should point to the app directory

@@ -45,6 +45,9 @@
     "api:codegen": "cd packages/api-types && pnpm run codegen",
     "knip": "pnpx knip@~5.50.0"
   },
+  "dependencies": {
+    "next": "catalog:"
+  },
   "devDependencies": {
     "@aws-sdk/client-secrets-manager": "^3.410.0",
     "@types/node": "catalog:",
