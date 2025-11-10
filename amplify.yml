@@ -58,12 +58,20 @@ applications:
               [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
               # Ensure corepack is enabled
               corepack enable
-              # Install all dependencies
+              # Install all dependencies (this should install for all workspace packages)
               pnpm install --frozen-lockfile
-              # Verify Next.js is installed
+              # Verify installation
               APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
               echo "Verifying dependencies for $APP_NAME..."
-              pnpm --filter $APP_NAME list next || echo "Warning: next not found in $APP_NAME"
+              # Check if next exists in workspace
+              if [ -f "node_modules/.bin/next" ]; then
+                echo "✓ Found next in root node_modules/.bin/next"
+              elif [ -f "apps/$APP_NAME/node_modules/.bin/next" ]; then
+                echo "✓ Found next in apps/$APP_NAME/node_modules/.bin/next"
+              else
+                echo "✗ next not found, listing node_modules..."
+                ls -la node_modules/.bin/ | head -10
+              fi
         build:
           commands:
             # Ensure nvm, Node.js 22, and corepack/pnpm are available
@@ -86,20 +94,21 @@ applications:
               corepack enable
               APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
               APP_DIR="apps/$APP_NAME"
-              # Verify we're in the root directory and dependencies are installed
+              # Ensure we're in the root directory
               pwd
-              echo "Checking for next in workspace..."
-              # Check if next exists in the app's node_modules or root
-              if [ -f "$APP_DIR/node_modules/.bin/next" ]; then
-                echo "Found next in $APP_DIR/node_modules/.bin/next"
-              elif [ -f "node_modules/.bin/next" ]; then
-                echo "Found next in root node_modules/.bin/next"
-              else
-                echo "Warning: next not found, but continuing..."
+              # Find where next is located
+              NEXT_PATH=$(find . -name "next" -path "*/node_modules/.bin/next" 2>/dev/null | head -1)
+              if [ -n "$NEXT_PATH" ]; then
+                echo "Found next at: $NEXT_PATH"
+                # Add the directory containing next to PATH
+                export PATH="$(dirname $(realpath $NEXT_PATH)):$PATH"
               fi
-              # Build using pnpm filter - pnpm should handle PATH correctly
-              # Use --dir to ensure we're in the right context
-              cd $APP_DIR && pnpm build && cd ../..
+              # Also add common node_modules paths
+              export PATH="$PWD/node_modules/.bin:$PWD/$APP_DIR/node_modules/.bin:$PATH"
+              # Verify next is now accessible
+              which next && next --version || echo "next still not found in PATH"
+              # Build using pnpm filter - pnpm should handle workspace PATH correctly
+              pnpm --filter $APP_NAME run build
       artifacts:
         # For Next.js apps, Amplify handles the build output automatically
         # Since AMPLIFY_MONOREPO_APP_ROOT=studio, this resolves to apps/studio/.next
