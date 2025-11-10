@@ -100,8 +100,21 @@ applications:
                 exit 1
               fi
               echo "Workspace root: $(pwd)"
-              # Verify next is available in node_modules
-              ls -la node_modules/.bin/next 2>&1 || echo "next not in root node_modules"
+              # Install dependencies if node_modules is missing or incomplete
+              if [ ! -f "node_modules/.bin/next" ]; then
+                echo "Dependencies missing, running pnpm install..."
+                pnpm install --frozen-lockfile
+              fi
+              # Verify next is now available
+              if [ ! -f "node_modules/.bin/next" ]; then
+                echo "ERROR: next binary still not found after install"
+                echo "Checking package.json for next dependency..."
+                cat package.json | grep -A 2 '"dependencies"'
+                echo "Listing node_modules/.bin contents:"
+                ls -la node_modules/.bin/ | head -20
+                exit 1
+              fi
+              echo "✓ Found next at node_modules/.bin/next"
               # Use pnpm filter to build studio with proper workspace context
               pnpm --filter studio run build
       artifacts:
