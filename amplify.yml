@@ -22,11 +22,17 @@ applications:
               echo "npm version: $(npm --version)"
               # Store path for build phase
               echo "export PATH=\"$PWD/node-v${NODE_VERSION}-linux-x64/bin:\$PATH\"" >> ~/.bashrc
-            # Install pnpm if not available
-            - corepack enable
-            - corepack prepare pnpm@10.18.0 --activate
+            # Disable nvm detection and install pnpm
+            - |
+              # Tell corepack/pnpm not to look for nvm
+              export NVM_DIR=""
+              export PATH="$PWD/node-v22.11.0-linux-x64/bin:$PATH"
+              corepack enable
+              corepack prepare pnpm@10.18.0 --activate
             # Install dependencies for the entire monorepo
-            - pnpm install --frozen-lockfile
+            - |
+              export PATH="$PWD/node-v22.11.0-linux-x64/bin:$PATH"
+              pnpm install --frozen-lockfile
         build:
           commands:
             # Ensure Node.js 22 is in PATH
@@ -37,6 +43,8 @@ applications:
             # Extract app name from AMPLIFY_MONOREPO_APP_ROOT path for pnpm filter
             # If AMPLIFY_MONOREPO_APP_ROOT=apps/studio, this becomes 'studio'
             - |
+              export PATH="$PWD/node-v22.11.0-linux-x64/bin:$PATH"
+              export NVM_DIR=""
               APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
               pnpm --filter $APP_NAME build
       artifacts:
