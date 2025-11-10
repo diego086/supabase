@@ -13,7 +13,6 @@ applications:
               APP_NAME=$(basename ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})
               echo "Building app: $APP_NAME (from path: ${AMPLIFY_MONOREPO_APP_ROOT:-apps/studio})"
             # Install Node.js 22 directly (required by package.json engines.node >=22)
-            # Alternative to nvm: Download and install Node.js 22
             - |
               NODE_VERSION="22.11.0"
               curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o node.tar.xz
