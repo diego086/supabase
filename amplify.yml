@@ -1,0 +1,32 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Install pnpm if not available
+        - corepack enable
+        - corepack prepare pnpm@10.18.0 --activate
+        # Install dependencies for the entire monorepo
+        - pnpm install --frozen-lockfile
+    build:
+      commands:
+        # Build the specific app
+        # Change 'studio' to 'docs' or 'www' if deploying a different app
+        # Make sure AMPLIFY_MONOREPO_APP_ROOT is set to the same app directory in Amplify console
+        - pnpm --filter studio build
+  artifacts:
+    # For Next.js apps, Amplify handles the build output automatically
+    # The baseDirectory should point to the app directory
+    baseDirectory: apps/studio
+    files:
+      - '.next/**/*'
+      - 'public/**/*'
+      - 'package.json'
+      - 'next.config.js'
+  cache:
+    paths:
+      - node_modules/**/*
+      - apps/studio/.next/cache/**/*
+      - apps/studio/node_modules/**/*
+      - packages/*/node_modules/**/*
+
